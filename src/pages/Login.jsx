@@ -1,9 +1,35 @@
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import Input from "../components/Input"
 import Button from "../components/Button"
+import { loginUser, isLoggedIn } from "../utils/auth"
 
 export default function Login() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const navigate = useNavigate()
+
+  // Redirecionar se já estiver logado
+  useEffect(() => {
+    if (isLoggedIn()) {
+      navigate("/feed")
+    }
+  }, [navigate])
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    setError("")
+
+    try {
+      loginUser(email, password)
+      navigate("/feed")
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-black">
       <motion.div
@@ -17,9 +43,30 @@ export default function Login() {
           <p className="text-white/60 mt-2">Acesse sua conta</p>
         </div>
 
-        <form className="flex flex-col gap-5">
-          <Input label="E-mail" type="email" placeholder="seu@email.com" autoComplete="email" />
-          <Input label="Senha" type="password" placeholder="••••••••" autoComplete="current-password" />
+        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+          <Input
+            label="E-mail"
+            type="email"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            label="Senha"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
           <Button type="submit">Entrar</Button>
         </form>
 

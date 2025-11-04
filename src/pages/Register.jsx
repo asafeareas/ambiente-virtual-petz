@@ -1,9 +1,36 @@
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import Input from "../components/Input"
 import Button from "../components/Button"
+import { registerUser, isLoggedIn } from "../utils/auth"
 
 export default function Register() {
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const navigate = useNavigate()
+
+  // Redirecionar se já estiver logado
+  useEffect(() => {
+    if (isLoggedIn()) {
+      navigate("/feed")
+    }
+  }, [navigate])
+
+  const handleRegister = (e) => {
+    e.preventDefault()
+    setError("")
+
+    try {
+      registerUser(name, email, password)
+      navigate("/feed")
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-black">
       <motion.div
@@ -17,10 +44,38 @@ export default function Register() {
           <p className="text-white/60 mt-2">Preencha seus dados</p>
         </div>
 
-        <form className="flex flex-col gap-5">
-          <Input label="Nome" type="text" placeholder="Seu nome" autoComplete="name" />
-          <Input label="E-mail" type="email" placeholder="seu@email.com" autoComplete="email" />
-          <Input label="Senha" type="password" placeholder="••••••••" autoComplete="new-password" />
+        <form onSubmit={handleRegister} className="flex flex-col gap-5">
+          <Input
+            label="Nome"
+            type="text"
+            placeholder="Seu nome"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Input
+            label="E-mail"
+            type="email"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            label="Senha"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
           <Button type="submit">Cadastrar</Button>
         </form>
 
