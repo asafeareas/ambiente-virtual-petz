@@ -9,7 +9,9 @@ export default function Register() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
 
   // Redirecionar se já estiver logado
@@ -19,13 +21,30 @@ export default function Register() {
     }
   }, [navigate])
 
+  // Redirecionar após mensagem de sucesso
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate("/login")
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [success, navigate])
+
   const handleRegister = (e) => {
     e.preventDefault()
     setError("")
+    setSuccess(false)
+
+    // Validar senhas
+    if (password !== confirmPassword) {
+      setError("As senhas não coincidem.")
+      return
+    }
 
     try {
       registerUser(name, email, password)
-      navigate("/feed")
+      setSuccess(true)
     } catch (err) {
       setError(err.message)
     }
@@ -69,10 +88,24 @@ export default function Register() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <Input
+            label="Confirmar Senha"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
           
           {error && (
             <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50">
               <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/50">
+              <p className="text-green-400 text-sm">Conta criada com sucesso! Faça login para continuar.</p>
             </div>
           )}
 

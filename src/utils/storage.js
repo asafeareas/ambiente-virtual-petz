@@ -41,3 +41,7 @@ export function removeStorage(key) {
   }
 }
 
+// Chaves convencionais para posts e reações
+export const POSTS_KEY = "conectapetz_posts"
+export const USER_REACTIONS_KEY = "conectapetz_userReactions"
+

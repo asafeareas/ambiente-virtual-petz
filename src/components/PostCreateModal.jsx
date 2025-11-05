@@ -12,19 +12,74 @@ export default function PostCreateModal({ isOpen, onClose, onCreatePost }) {
     title: "",
     summary: "",
     body: "",
+    image: null,
+    file: null,
+    fileType: null,
   })
+  const [imagePreview, setImagePreview] = useState(null)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (formData.title.trim() && formData.summary.trim() && formData.body.trim()) {
+    if (formData.title.trim() && formData.body.trim()) {
       onCreatePost(formData)
-      setFormData({ title: "", summary: "", body: "" })
+      setFormData({ title: "", summary: "", body: "", image: null, file: null, fileType: null })
+      setImagePreview(null)
       onClose()
     }
   }
 
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }))
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const fileType = file.type
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'application/pdf'
+    ]
+
+    if (!allowedTypes.includes(fileType)) {
+      alert('Tipo de arquivo não permitido. Use: .jpg, .jpeg, .png, .gif ou .pdf')
+      return
+    }
+
+    if (fileType.startsWith('image/')) {
+      const imageUrl = URL.createObjectURL(file)
+      setImagePreview(imageUrl)
+      setFormData((prev) => ({
+        ...prev,
+        image: imageUrl,
+        file: imageUrl,
+        fileType: fileType,
+      }))
+    } else {
+      const fileUrl = URL.createObjectURL(file)
+      setFormData((prev) => ({
+        ...prev,
+        file: fileUrl,
+        fileType: fileType,
+        image: null,
+      }))
+      setImagePreview(null)
+    }
+  }
+
+  const handleRemoveFile = () => {
+    if (formData.image) {
+      URL.revokeObjectURL(formData.image)
+    }
+    if (formData.file) {
+      URL.revokeObjectURL(formData.file)
+    }
+    setFormData((prev) => ({ ...prev, image: null, file: null, fileType: null }))
+    setImagePreview(null)
   }
 
   return (
@@ -71,11 +126,10 @@ export default function PostCreateModal({ isOpen, onClose, onCreatePost }) {
                 />
 
                 <Input
-                  label="Resumo"
+                  label="Resumo (opcional)"
                   placeholder="Um resumo curto do post"
                   value={formData.summary}
                   onChange={handleChange("summary")}
-                  required
                 />
 
                 <div className="flex flex-col gap-2">
@@ -87,6 +141,49 @@ export default function PostCreateModal({ isOpen, onClose, onCreatePost }) {
                     onChange={handleChange("body")}
                     required
                   />
+                </div>
+
+                {/* Upload de arquivo */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-white/80">Anexar arquivo (opcional)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.pdf"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="flex-1 rounded-xl bg-white/10 border border-white/20 px-4 py-3 text-white/80 hover:bg-white/20 transition cursor-pointer text-center text-sm"
+                    >
+                      {formData.file ? "Trocar arquivo" : "Selecionar arquivo (.jpg, .png, .gif, .pdf)"}
+                    </label>
+                    {formData.file && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50 transition text-sm"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                  {imagePreview && (
+                    <div className="mt-2 rounded-lg overflow-hidden">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full max-h-48 object-contain bg-white/5"
+                      />
+                    </div>
+                  )}
+                  {formData.file && !imagePreview && (
+                    <div className="mt-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-white/80 text-sm">Arquivo selecionado: {formData.fileType || "Documento"}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">

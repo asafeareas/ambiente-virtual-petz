@@ -4,11 +4,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Plus, LogOut } from "lucide-react"
 import PostCard from "./PostCard"
 import PostCreateModal from "./PostCreateModal"
-import { getStorage, setStorage, initStorageIfEmpty } from "../utils/storage"
+import { getStorage, setStorage, initStorageIfEmpty, POSTS_KEY } from "../utils/storage"
 import { mockPosts } from "../data/mockPosts"
 import { getCurrentUser, logoutUser } from "../utils/auth"
-
-const STORAGE_KEY = "conectapetz_posts"
+import { toggleReaction } from "../utils/reactions"
 
 /**
  * Componente principal do Feed
@@ -31,14 +30,27 @@ export default function Feed() {
 
   // Carregar posts do localStorage
   useEffect(() => {
-    const storedPosts = initStorageIfEmpty(STORAGE_KEY, mockPosts)
-    setPosts(storedPosts)
+    const storedPosts = initStorageIfEmpty(POSTS_KEY, mockPosts)
+    // Garantir que todos os posts tenham arrays de comentários
+    const normalizedPosts = storedPosts.map(post => ({
+      ...post,
+      comments: post.comments || [],
+      reactions: post.reactions || { like: [], love: [], question: [] }
+    }))
+    setPosts(normalizedPosts)
+    console.log("✅ FeedPage renderizada com sucesso. Posts carregados:", normalizedPosts.length)
   }, [])
+
+  // Função para recarregar posts do localStorage
+  const refreshPostsFromStorage = () => {
+    const latest = getStorage(POSTS_KEY) || []
+    setPosts(latest)
+  }
 
   // Salvar posts no localStorage sempre que mudarem
   useEffect(() => {
     if (posts.length > 0) {
-      setStorage(STORAGE_KEY, posts)
+      setStorage(POSTS_KEY, posts)
     }
   }, [posts])
 
@@ -49,25 +61,49 @@ export default function Feed() {
       title: formData.title,
       summary: formData.summary,
       body: formData.body,
-      author: { name: user?.name || "Usuário" },
+      author: { name: user?.name || "Usuário", email: user?.email },
       date: new Date().toISOString(),
-      reactions: { like: 0, love: 0, question: 0 },
+      reactions: { like: [], love: [], question: [] },
       comments: [],
+      image: formData.image || null,
+      file: formData.file || null,
+      fileType: formData.fileType || null,
     }
 
     setPosts((prev) => [newPost, ...prev])
   }
 
   const handleReaction = (postId, reactionType) => {
+    const user = getCurrentUser()
+    if (!user || !user.email) {
+      alert("Faça login para reagir.")
+      return
+    }
+
+    // Usar toggleReaction que gerencia o estado e persistência
+    const { posts: updatedPosts } = toggleReaction(postId, user.email, reactionType)
+    
+    // Atualizar o estado local com os posts atualizados
+    setPosts(updatedPosts)
+  }
+
+  const handleAddComment = (postId, commentText) => {
+    const user = getCurrentUser()
+    const newComment = {
+      id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      author: user?.name || "Usuário",
+      authorEmail: user?.email,
+      text: commentText,
+      date: new Date().toISOString(),
+      reactions: { like: [], love: [], question: [] },
+    }
+    
     setPosts((prev) =>
       prev.map((post) => {
         if (post.id === postId) {
           return {
             ...post,
-            reactions: {
-              ...post.reactions,
-              [reactionType]: (post.reactions[reactionType] || 0) + 1,
-            },
+            comments: [...(post.comments || []), newComment],
           }
         }
         return post
@@ -75,26 +111,55 @@ export default function Feed() {
     )
   }
 
-  const handleAddComment = (postId, commentText) => {
-    const user = getCurrentUser()
+  const handleEditPost = (postId, updatedData) => {
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          return { ...post, ...updatedData }
+        }
+        return post
+      })
+    )
+  }
+
+  const handleDeletePost = (postId) => {
+    if (window.confirm("Tem certeza que deseja excluir este post?")) {
+      setPosts((prev) => prev.filter((post) => post.id !== postId))
+    }
+  }
+
+  const handleEditComment = (postId, commentId, updatedText) => {
     setPosts((prev) =>
       prev.map((post) => {
         if (post.id === postId) {
           return {
             ...post,
-            comments: [
-              ...post.comments,
-              {
-                author: user?.name || "Usuário",
-                text: commentText,
-                date: new Date().toISOString(),
-              },
-            ],
+            comments: (post.comments || []).map((comment) =>
+              comment.id === commentId
+                ? { ...comment, text: updatedText }
+                : comment
+            ),
           }
         }
         return post
       })
     )
+  }
+
+  const handleDeleteComment = (postId, commentId) => {
+    if (window.confirm("Tem certeza que deseja excluir este comentário?")) {
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              comments: (post.comments || []).filter((comment) => comment.id !== commentId),
+            }
+          }
+          return post
+        })
+      )
+    }
   }
 
   const handleLogout = () => {
@@ -168,6 +233,10 @@ export default function Feed() {
                   post={post}
                   onReaction={handleReaction}
                   onAddComment={handleAddComment}
+                  onEditPost={handleEditPost}
+                  onDeletePost={handleDeletePost}
+                  onEditComment={handleEditComment}
+                  onDeleteComment={handleDeleteComment}
                 />
               ))}
             </AnimatePresence>

@@ -13,7 +13,7 @@ export const initAuth = () => {
 }
 
 /**
- * Registra novo usuário
+ * Registra novo usuário — NÃO cria sessão automaticamente
  */
 export const registerUser = (name, email, password) => {
   const users = getStorage(USERS_KEY) || []
@@ -32,7 +32,8 @@ export const registerUser = (name, email, password) => {
 
   users.push(newUser)
   setStorage(USERS_KEY, users)
-  setStorage(CURRENT_USER_KEY, newUser)
+  
+  // NÃO faz login automático — apenas retorna o novo usuário
   return newUser
 }
 
@@ -62,7 +63,12 @@ export const logoutUser = () => {
  * Obtém o usuário logado atual
  */
 export const getCurrentUser = () => {
-  return getStorage(CURRENT_USER_KEY)
+  try {
+    return getStorage(CURRENT_USER_KEY) || null
+  } catch (error) {
+    console.error("Erro ao obter usuário atual:", error)
+    return null
+  }
 }
 
 /**
