@@ -4,6 +4,7 @@ import { MessageSquare, Send, MoreVertical, Edit2, Trash2 } from "lucide-react"
 import Input from "./Input"
 import Button from "./Button"
 import Avatar from "./Avatar"
+import { getUserAvatar } from "../utils/userUtils"
 
 /**
  * Componente de lista de comentários com expand/collapse
@@ -95,7 +96,11 @@ export default function CommentsList({ comments = [], postId, onAddComment, onEd
                       transition={{ delay: index * 0.1 }}
                       className="flex gap-3 p-3 rounded-lg bg-white/5 border border-white/10 relative"
                     >
-                      <Avatar name={comment.author} size="sm" />
+                      <Avatar 
+                        name={comment.author} 
+                        size="sm" 
+                        avatar={getUserAvatar(comment.authorEmail)}
+                      />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-white">{comment.author}</span>

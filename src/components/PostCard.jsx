@@ -5,6 +5,7 @@ import Avatar from "./Avatar"
 import Reactions from "./Reactions"
 import CommentsList from "./CommentsList"
 import { getCurrentUser } from "../utils/auth"
+import { getUserAvatar } from "../utils/userUtils"
 
 /**
  * Card de post individual
@@ -110,7 +111,11 @@ export default function PostCard({ post, onReaction, onAddComment, onEditPost, o
     >
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
-        <Avatar name={post.author?.name || "Usuário"} size="md" />
+        <Avatar 
+          name={post.author?.name || "Usuário"} 
+          size="md" 
+          avatar={post.author?.avatar || getUserAvatar(post.author?.email)}
+        />
         <div className="flex-1">
           <h3 className="text-white font-semibold">{post.author?.name || "Usuário"}</h3>
           <p className="text-sm text-white/50">{formatDate(post.date)}</p>

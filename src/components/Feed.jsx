@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, LogOut } from "lucide-react"
+import { Plus } from "lucide-react"
+import Header from "./Header"
 import PostCard from "./PostCard"
 import PostCreateModal from "./PostCreateModal"
 import { getStorage, setStorage, initStorageIfEmpty, POSTS_KEY } from "../utils/storage"
 import { mockPosts } from "../data/mockPosts"
-import { getCurrentUser, logoutUser } from "../utils/auth"
+import { getCurrentUser } from "../utils/auth"
 import { toggleReaction } from "../utils/reactions"
 
 /**
@@ -61,7 +62,11 @@ export default function Feed() {
       title: formData.title,
       summary: formData.summary,
       body: formData.body,
-      author: { name: user?.name || "Usuário", email: user?.email },
+      author: { 
+        name: user?.name || "Usuário", 
+        email: user?.email,
+        avatar: user?.avatar || null
+      },
       date: new Date().toISOString(),
       reactions: { like: [], love: [], question: [] },
       comments: [],
@@ -162,44 +167,19 @@ export default function Feed() {
     }
   }
 
-  const handleLogout = () => {
-    logoutUser()
-    navigate("/login")
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0f1e] to-[#020409] py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-center flex-1">
-              <h1 className="text-4xl font-bold text-white mb-2">ConectaPetz</h1>
-              <p className="text-white/60">Comunidade de amantes de pets</p>
-            </div>
-            {currentUser && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/50 transition-all"
-                title="Sair"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sair</span>
-              </motion.button>
-            )}
-          </div>
-          {currentUser && (
-            <div className="text-center">
-              <p className="text-white/80 text-sm">
-                Olá, <span className="font-semibold text-white">{currentUser.name}</span>
-              </p>
-            </div>
-          )}
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0f1e] to-[#020409]">
+      {/* Header fixa */}
+      <Header />
 
-        {/* Botão flutuante criar post */}
+      {/* Conteúdo principal com padding-top para compensar header fixa */}
+      <main className="pt-24 px-6">
+        <h1 className="text-2xl font-extrabold tracking-wide text-white uppercase mb-6 text-center">
+          FEED DE COMUNICADOS
+        </h1>
+
+        <div className="max-w-4xl mx-auto">
+          {/* Botão flutuante criar post */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -209,39 +189,39 @@ export default function Feed() {
           <Plus className="w-6 h-6" />
         </motion.button>
 
-        {/* Lista de posts */}
-        {posts.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center"
-          >
-            <p className="text-white/60 text-lg mb-4">Nenhum post ainda</p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-blue-500/20"
+          {/* Lista de posts */}
+          {posts.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center"
             >
-              Criar Primeiro Post
-            </button>
-          </motion.div>
-        ) : (
-          <div className="space-y-6">
-            <AnimatePresence>
-              {posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onReaction={handleReaction}
-                  onAddComment={handleAddComment}
-                  onEditPost={handleEditPost}
-                  onDeletePost={handleDeletePost}
-                  onEditComment={handleEditComment}
-                  onDeleteComment={handleDeleteComment}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
+              <p className="text-white/60 text-lg mb-4">Nenhum post ainda</p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-blue-500/20"
+              >
+                Criar Primeiro Post
+              </button>
+            </motion.div>
+          ) : (
+            <div className="space-y-6">
+              <AnimatePresence>
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onReaction={handleReaction}
+                    onAddComment={handleAddComment}
+                    onEditPost={handleEditPost}
+                    onDeletePost={handleDeletePost}
+                    onEditComment={handleEditComment}
+                    onDeleteComment={handleDeleteComment}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
 
         {/* Modal */}
         <PostCreateModal
@@ -249,7 +229,8 @@ export default function Feed() {
           onClose={() => setIsModalOpen(false)}
           onCreatePost={handleCreatePost}
         />
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

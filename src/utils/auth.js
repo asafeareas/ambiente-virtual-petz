@@ -78,3 +78,48 @@ export const isLoggedIn = () => {
   return !!getStorage(CURRENT_USER_KEY)
 }
 
+/**
+ * Atualiza os dados do usuário atual
+ */
+export const updateUser = (updatedData) => {
+  const currentUser = getCurrentUser()
+  if (!currentUser) {
+    throw new Error("Nenhum usuário logado.")
+  }
+
+  const users = getStorage(USERS_KEY) || []
+  const userIndex = users.findIndex((u) => u.id === currentUser.id)
+
+  if (userIndex === -1) {
+    throw new Error("Usuário não encontrado.")
+  }
+
+  // Atualizar na lista de usuários
+  const updatedUser = {
+    ...users[userIndex],
+    ...updatedData,
+    id: currentUser.id, // Manter o ID original
+  }
+
+  // Se o email mudou, verificar se não existe outro usuário com esse email
+  if (updatedData.email && updatedData.email !== currentUser.email) {
+    const emailExists = users.some((u) => u.email === updatedData.email && u.id !== currentUser.id)
+    if (emailExists) {
+      throw new Error("E-mail já cadastrado por outro usuário.")
+    }
+  }
+
+  // Atualizar senha apenas se fornecida
+  if (!updatedData.password) {
+    delete updatedUser.password
+  }
+
+  users[userIndex] = updatedUser
+  setStorage(USERS_KEY, users)
+
+  // Atualizar usuário atual no localStorage
+  setStorage(CURRENT_USER_KEY, updatedUser)
+
+  return updatedUser
+}
+
