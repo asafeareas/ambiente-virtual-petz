@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion as Motion } from "framer-motion"
 import { Plus } from "lucide-react"
-import Header from "./Header"
 import PostCard from "./PostCard"
 import PostCreateModal from "./PostCreateModal"
-import { getStorage, setStorage, initStorageIfEmpty, POSTS_KEY } from "../utils/storage"
+import { setStorage, initStorageIfEmpty, POSTS_KEY } from "../utils/storage"
 import { mockPosts } from "../data/mockPosts"
 import { getCurrentUser } from "../utils/auth"
 import { toggleReaction } from "../utils/reactions"
@@ -16,7 +15,6 @@ import { toggleReaction } from "../utils/reactions"
 export default function Feed() {
   const [posts, setPosts] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
   const navigate = useNavigate()
 
   // Carregar usuário atual
@@ -26,7 +24,6 @@ export default function Feed() {
       navigate("/login")
       return
     }
-    setCurrentUser(user)
   }, [navigate])
 
   // Carregar posts do localStorage
@@ -41,12 +38,6 @@ export default function Feed() {
     setPosts(normalizedPosts)
     console.log("✅ FeedPage renderizada com sucesso. Posts carregados:", normalizedPosts.length)
   }, [])
-
-  // Função para recarregar posts do localStorage
-  const refreshPostsFromStorage = () => {
-    const latest = getStorage(POSTS_KEY) || []
-    setPosts(latest)
-  }
 
   // Salvar posts no localStorage sempre que mudarem
   useEffect(() => {
@@ -168,60 +159,55 @@ export default function Feed() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0f1e] to-[#020409]">
-      {/* Header fixa */}
-      <Header />
+    <>
+      <h1 className="text-2xl font-extrabold tracking-wide text-white uppercase mb-6 text-center">
+        FEED DE COMUNICADOS
+      </h1>
 
-      {/* Conteúdo principal com padding-top para compensar header fixa */}
-      <main className="pt-24 px-6">
-        <h1 className="text-2xl font-extrabold tracking-wide text-white uppercase mb-6 text-center">
-          FEED DE COMUNICADOS
-        </h1>
-
-        <div className="max-w-4xl mx-auto">
-          {/* Botão flutuante criar post */}
-        <motion.button
+      <div className="max-w-4xl mx-auto">
+        {/* Botão flutuante criar post */}
+        <Motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsModalOpen(true)}
           className="fixed bottom-8 right-8 z-30 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-full shadow-lg hover:shadow-blue-500/50 transition-all"
         >
           <Plus className="w-6 h-6" />
-        </motion.button>
+        </Motion.button>
 
-          {/* Lista de posts */}
-          {posts.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center"
+        {/* Lista de posts */}
+        {posts.length === 0 ? (
+          <Motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center"
+          >
+            <p className="text-white/60 text-lg mb-4">Nenhum post ainda</p>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-blue-500/20"
             >
-              <p className="text-white/60 text-lg mb-4">Nenhum post ainda</p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-blue-500/20"
-              >
-                Criar Primeiro Post
-              </button>
-            </motion.div>
-          ) : (
-            <div className="space-y-6">
-              <AnimatePresence>
-                {posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    onReaction={handleReaction}
-                    onAddComment={handleAddComment}
-                    onEditPost={handleEditPost}
-                    onDeletePost={handleDeletePost}
-                    onEditComment={handleEditComment}
-                    onDeleteComment={handleDeleteComment}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
+              Criar Primeiro Post
+            </button>
+          </Motion.div>
+        ) : (
+          <div className="space-y-6">
+            <AnimatePresence>
+              {posts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  onReaction={handleReaction}
+                  onAddComment={handleAddComment}
+                  onEditPost={handleEditPost}
+                  onDeletePost={handleDeletePost}
+                  onEditComment={handleEditComment}
+                  onDeleteComment={handleDeleteComment}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Modal */}
         <PostCreateModal
@@ -229,9 +215,8 @@ export default function Feed() {
           onClose={() => setIsModalOpen(false)}
           onCreatePost={handleCreatePost}
         />
-        </div>
-      </main>
-    </div>
+      </div>
+    </>
   )
 }
 

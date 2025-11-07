@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion as Motion } from "framer-motion"
 import { Bell, MessageCircle, UserCircle, Edit2, LogOut } from "lucide-react"
 import { getCurrentUser, logoutUser } from "../utils/auth"
 import EditProfileModal from "./EditProfileModal"
@@ -8,7 +8,7 @@ import EditProfileModal from "./EditProfileModal"
 /**
  * Header fixa com glassmorphism
  */
-export default function Header() {
+export default function Header({ sidebarOffset = "0px" }) {
   const [currentUser, setCurrentUser] = useState(null)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -66,7 +66,10 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-md bg-white/10 border-b border-white/20 shadow-lg">
+      <header
+        className="fixed top-0 z-50 backdrop-blur-md bg-white/10 border-b border-white/20 shadow-lg transition-all duration-300"
+        style={{ left: sidebarOffset, right: 0 }}
+      >
         <div className="flex items-center justify-between px-6 py-3">
           {/* Esquerda - Título */}
           <div className="flex items-center gap-3">
@@ -81,28 +84,28 @@ export default function Header() {
           {/* Direita - Ícones */}
           <div className="flex items-center gap-4">
             {/* Notificações */}
-            <motion.button
+            <Motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               className="p-2 rounded-lg hover:bg-white/10 transition text-white/70 hover:text-white"
               title="Notificações"
             >
               <Bell className="w-5 h-5" />
-            </motion.button>
+            </Motion.button>
 
             {/* Chat */}
-            <motion.button
+            <Motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               className="p-2 rounded-lg hover:bg-white/10 transition text-white/70 hover:text-white"
               title="Chat"
             >
               <MessageCircle className="w-5 h-5" />
-            </motion.button>
+            </Motion.button>
 
             {/* Perfil com dropdown */}
             <div className="relative profile-menu-container">
-              <motion.button
+              <Motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -118,12 +121,12 @@ export default function Header() {
                 ) : (
                   <UserCircle className="w-8 h-8 text-white/70 hover:text-white" />
                 )}
-              </motion.button>
+              </Motion.button>
 
               {/* Dropdown Menu */}
               <AnimatePresence>
                 {showProfileMenu && (
-                  <motion.div
+                  <Motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -152,7 +155,7 @@ export default function Header() {
                         Sair
                       </button>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 )}
               </AnimatePresence>
             </div>

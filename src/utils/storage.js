@@ -44,4 +44,5 @@ export function removeStorage(key) {
 // Chaves convencionais para posts e reações
 export const POSTS_KEY = "conectapetz_posts"
 export const USER_REACTIONS_KEY = "conectapetz_userReactions"
+export const KANBAN_DATA_KEY = "conectapetz_kanbanData"
 
